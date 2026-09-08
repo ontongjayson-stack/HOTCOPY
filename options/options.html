@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HOTCOPY - Preferences & Custom Field Mappings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <img src="../icons/icon-48.png" alt="HOTCOPY Logo" class="logo">
+        <div>
+          <h1>HOTCOPY Configuration</h1>
+          <p class="subtitle">Customize field aliases, auto-fill behavior, and Google Script mapping</p>
+        </div>
+      </div>
+      <button id="btn-save" class="btn btn-primary">Save Changes</button>
+    </header>
+
+    <!-- General Settings Card -->
+    <section class="card">
+      <h2>General Behavior</h2>
+      <div class="grid-2">
+        <div class="form-check">
+          <input type="checkbox" id="opt-auto-fill" checked>
+          <div>
+            <label for="opt-auto-fill" class="check-title">Autofill on Field Focus/Click</label>
+            <p class="check-desc">Automatically populates the detected field when clicked in Google Script.</p>
+          </div>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="opt-tab-jump" checked>
+          <div>
+            <label for="opt-tab-jump" class="check-title">Auto-Advance on Tab Key</label>
+            <p class="check-desc">Pressing TAB commits the value and automatically jumps to the next form field.</p>
+          </div>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="opt-floating-dock" checked>
+          <div>
+            <label for="opt-floating-dock" class="check-title">Show Floating Assistant Dock</label>
+            <p class="check-desc">Shows the floating pill in the bottom-right of pages with quick actions.</p>
+          </div>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="opt-highlight" checked>
+          <div>
+            <label for="opt-highlight" class="check-title">Highlight Filled Fields</label>
+            <p class="check-desc">Applies an emerald green glow to confirm values were filled by the assistant.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Custom Field Mappings Card -->
+    <section class="card">
+      <div class="card-header-flex">
+        <div>
+          <h2>Custom Field Mappings</h2>
+          <p class="card-desc">Add custom labels, placeholders, or column headers used in your Google Script form so HOTCOPY recognizes them instantly.</p>
+        </div>
+        <button id="btn-add-mapping" class="btn btn-secondary">+ Add Field Alias</button>
+      </div>
+
+      <table class="mapping-table">
+        <thead>
+          <tr>
+            <th style="width: 28%;">Profile Field</th>
+            <th>Keywords / Google Script Column Names (comma separated)</th>
+            <th style="width: 10%; text-align: center;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="mapping-tbody">
+          <!-- Dynamically populated rows -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Data Management Card -->
+    <section class="card">
+      <h2>Data & Privacy</h2>
+      <p class="card-desc">All captured profile data is stored strictly locally inside your browser's private extension storage. No data is ever transmitted to external servers.</p>
+      <div class="btn-group">
+        <button id="btn-export" class="btn btn-secondary">Export Settings (JSON)</button>
+        <button id="btn-clear-history" class="btn btn-danger">Clear All Profile History</button>
+      </div>
+    </section>
+
+    <!-- Notification Toast -->
+    <div id="save-toast" class="toast">✓ Settings saved successfully!</div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

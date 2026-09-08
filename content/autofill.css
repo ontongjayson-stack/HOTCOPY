@@ -1,0 +1,295 @@
+/* HOTCOPY - Autofill & Overlay Styles */
+
+/* Highlight applied to autofilled fields */
+.edge-field-autofilled {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease !important;
+  border-color: #10b981 !important; /* Emerald 500 */
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
+  background-color: #f0fdf4 !important; /* Emerald 50 */
+}
+
+/* Inline mini confirmation badge */
+#edge-inline-assistant {
+  position: absolute;
+  z-index: 2147483645;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 11px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  border: 1px solid #334155;
+  pointer-events: none;
+  animation: edgeFadeIn 0.15s ease-out forwards;
+}
+
+@keyframes edgeFadeIn {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#edge-inline-assistant .edge-pill-badge {
+  background: #10b981;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+#edge-inline-assistant .edge-pill-label {
+  font-weight: 600;
+  color: #38bdf8;
+}
+
+#edge-inline-assistant .edge-pill-value {
+  color: #f8fafc;
+  max-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#edge-inline-assistant .edge-pill-hint {
+  color: #94a3b8;
+  font-size: 10px;
+  border-left: 1px solid #334155;
+  padding-left: 6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+#edge-inline-assistant .edge-kbd {
+  background: #334155;
+  color: #f1f5f9;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+/* Intelligent Autofill Dropdown Menu */
+#edge-field-dropdown {
+  position: absolute;
+  z-index: 2147483647;
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.08);
+  border: 1px solid #cbd5e1;
+  max-height: 280px;
+  width: 320px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: edgeFadeIn 0.15s ease-out forwards;
+}
+
+.edge-dropdown-header {
+  padding: 8px 12px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #334155;
+}
+
+.edge-dropdown-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edge-dropdown-header-tag {
+  color: #38bdf8;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.edge-dropdown-list {
+  overflow-y: auto;
+  max-height: 240px;
+}
+
+.edge-dropdown-item {
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.12s ease;
+  user-select: none;
+}
+
+.edge-dropdown-item:hover, .edge-dropdown-item.selected {
+  background-color: #ecfdf5; /* Emerald 50 */
+}
+
+.edge-dropdown-item.matched {
+  background-color: #f0fdf4;
+  border-left: 3px solid #10b981;
+}
+
+.edge-dropdown-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 140px;
+}
+
+.edge-dropdown-item .item-key {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.edge-dropdown-item .item-tag {
+  font-size: 9px;
+  background: #d1fae5;
+  color: #065f46;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 700;
+}
+
+.edge-dropdown-item .item-val {
+  color: #0369a1;
+  font-weight: 600;
+  font-size: 12px;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
+/* Floating HOTCOPY Dock (Always On Top) */
+#edge-assistant-dock {
+  position: fixed !important;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  background: #0f172a !important; /* Slate 900 */
+  color: #f8fafc !important;
+  padding: 8px 14px !important;
+  border-radius: 30px !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 0 1.5px #38bdf8 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 13px !important;
+  user-select: none !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  cursor: default;
+  max-width: 95vw;
+}
+
+#edge-assistant-dock .dock-drag-handle {
+  cursor: grab !important;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 2px 2px 0;
+  display: flex;
+  align-items: center;
+}
+
+#edge-assistant-dock .dock-drag-handle:active {
+  cursor: grabbing !important;
+}
+
+#edge-assistant-dock .dock-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+#edge-assistant-dock .dock-info {
+  display: flex;
+  flex-direction: column;
+}
+
+#edge-assistant-dock .dock-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: #f8fafc;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#edge-assistant-dock .dock-meta {
+  font-size: 10px;
+  color: #38bdf8;
+}
+
+#edge-assistant-dock .dock-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
+}
+
+#edge-assistant-dock .dock-btn {
+  background: #334155;
+  color: #f8fafc;
+  border: none;
+  border-radius: 14px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+#edge-assistant-dock .dock-btn:hover {
+  background: #475569;
+  transform: translateY(-1px);
+}
+
+#edge-assistant-dock .dock-btn.primary {
+  background: #0ea5e9;
+}
+
+#edge-assistant-dock .dock-btn.primary:hover {
+  background: #0284c7;
+}
+
+#edge-assistant-dock .dock-btn.close-btn {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  font-size: 14px !important;
+  padding: 4px 8px !important;
+  border-radius: 50% !important;
+}
+
+#edge-assistant-dock .dock-btn.close-btn:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}

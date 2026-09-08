@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HOTCOPY</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand">
+      <img src="../icons/icon-32.png" alt="HOTCOPY" class="app-logo">
+      <div class="brand-text">
+        <h1 class="app-title">HOTCOPY</h1>
+        <span class="app-tagline">Profile Capture ➔ Form Autofill</span>
+      </div>
+    </div>
+    <div id="status-pill" class="status-pill idle">
+      <span class="status-dot"></span>
+      <span id="status-text">No Client Loaded</span>
+    </div>
+  </header>
+
+  <!-- Quick Action Bar -->
+  <section class="action-bar">
+    <button id="btn-capture" class="btn btn-primary" title="Scrape client profile from current page">
+      <span class="btn-icon">⚡</span>
+      <span class="btn-label">Capture Profile</span>
+    </button>
+    <button id="btn-picker" class="btn btn-secondary" title="Pick any individual field from the screen">
+      <span class="btn-icon">🔍</span>
+      <span class="btn-label">Pick Element</span>
+    </button>
+    <button id="btn-autofill" class="btn btn-accent" title="Autofill all matching fields on this page">
+      <span class="btn-icon">📝</span>
+      <span class="btn-label">Fill Page</span>
+    </button>
+  </section>
+
+  <!-- Navigation Tabs -->
+  <nav class="tabs-nav">
+    <button class="tab-btn active" data-tab="tab-active">Active Client</button>
+    <button class="tab-btn" data-tab="tab-history">Recent Clients</button>
+    <button class="tab-btn" data-tab="tab-settings">Preferences</button>
+  </nav>
+
+  <!-- Tab 1: Active Client Details -->
+  <main id="tab-active" class="tab-pane active">
+    <div id="empty-state" class="empty-state">
+      <div class="empty-icon">📇</div>
+      <h3>No Client Profile Loaded</h3>
+      <p>Navigate to any client profile page and click <b>"Capture Profile"</b> above.</p>
+    </div>
+
+    <div id="client-card" class="client-card" style="display: none;">
+      <div class="client-header">
+        <div class="client-meta">
+          <h2 id="client-name" class="client-title">John Doe</h2>
+          <span id="client-id" class="client-subtitle">ID: 9001015000087</span>
+        </div>
+        <button id="btn-clear-profile" class="btn-icon-only text-danger" title="Clear this profile">✕</button>
+      </div>
+
+      <div id="field-list" class="field-list">
+        <!-- Dynamically injected fields -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Tab 2: Recent History -->
+  <section id="tab-history" class="tab-pane">
+    <div id="history-empty" class="empty-state">
+      <p>No recent profiles saved.</p>
+    </div>
+    <ul id="history-list" class="history-list">
+      <!-- Dynamically injected history -->
+    </ul>
+  </section>
+
+  <!-- Tab 3: Quick Settings -->
+  <section id="tab-settings" class="tab-pane">
+    <div class="setting-item">
+      <div class="setting-info">
+        <label class="setting-label">Autofill on Click/Focus</label>
+        <span class="setting-desc">Auto-fill matched value when clicking a form field</span>
+      </div>
+      <input type="checkbox" id="chk-auto-fill" checked>
+    </div>
+
+    <div class="setting-item">
+      <div class="setting-info">
+        <label class="setting-label">Tab Jump to Next Field</label>
+        <span class="setting-desc">Pressing TAB confirms and advances to next field</span>
+      </div>
+      <input type="checkbox" id="chk-tab-jump" checked>
+    </div>
+
+    <div class="setting-item">
+      <div class="setting-info">
+        <label class="setting-label">Floating Assistant Dock</label>
+        <span class="setting-desc">Display floating helper pill on web pages</span>
+      </div>
+      <input type="checkbox" id="chk-floating-dock" checked>
+    </div>
+
+    <div class="setting-item">
+      <div class="setting-info">
+        <label class="setting-label">Highlight Filled Fields</label>
+        <span class="setting-desc">Show green glow around successfully filled inputs</span>
+      </div>
+      <input type="checkbox" id="chk-highlight" checked>
+    </div>
+
+    <div class="settings-footer">
+      <button id="btn-open-options" class="btn btn-outline full-width">Advanced Field Mappings ⚙</button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <span class="shortcut-tip">Tip: Press <kbd>Tab</kbd> in Google Script to jump & autofill</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
