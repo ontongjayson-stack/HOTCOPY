@@ -5,34 +5,41 @@
   window.__edgeAssistantScraperInitialized = true;
 
   // Dictionary of known field aliases for intelligent extraction (specific fields ordered first)
+  // Dictionary of known field aliases for intelligent extraction (specific fields ordered first)
   const FIELD_DEFINITIONS = {
+    dateLoaded: ['date loaded', 'date_loaded', 'dateloaded', 'loaded date'],
+    branch: ['branch', 'home club', 'club', 'facility', 'gym'],
+    consultant: ['consultant', 'sales consultant', 'advisor', 'agent', 'sales rep', 'rep'],
+    cmNumber: ['cm#', 'cm no', 'cm number', 'cm', 'customer id', 'member id', 'membership number', 'membership no', 'client code', 'client id'],
+    memberName: ['member name', 'first name', 'firstname', 'given name', 'forename'],
+    memberSurname: ['member surname', 'surname', 'last name', 'lastname', 'family name'],
+    contactNumber: ['contact#', 'contact number', 'contact no', 'mobile number', 'mobile phone', 'mobile', 'cell phone', 'cell number', 'cellphone', 'cell'],
+    emailAddress: ['email address', 'e-mail address', 'email', 'e-mail', 'mail address'],
+    source: ['source', 'lead source', 'referral source'],
+    outcome: ['outcome', 'result', 'sales outcome'],
+    memberType: ['member type', 'membership type', 'package', 'contract type', 'plan', 'membership option', 'product'],
+    period: ['period', 'duration', 'term', 'months'],
+    value: ['value', 'amount', 'price', 'fee', 'cost', 'paid'],
+    firstDoDate: ['1st d/o date', '1st do date', 'first do date', 'd/o date', 'debit order date', 'first debit order date', 'start date'],
+    notes: ['notes', 'note', 'comments', 'comment', 'remarks', 'access number'],
+    idNumber: ['id number', 'id no', 'identity number', 'id', 'passport number', 'passport no', 'national id', 'rsa id'],
+    dob: ['date of birth', 'dob', 'birth date', 'birthdate'],
+    age: ['age'],
+    gender: ['gender', 'sex'],
+    homePhone: ['home phone', 'tel home', 'telephone (h)', 'telephone home', 'landline'],
+    workPhone: ['work phone', 'tel work', 'telephone (w)', 'telephone work', 'office phone'],
+    streetAddress: ['street address', 'physical address', 'residential address', 'address line 1', 'address 1', 'street'],
+    suburb: ['suburb', 'area', 'neighborhood'],
+    city: ['city', 'town'],
+    province: ['province', 'state', 'region'],
+    postalCode: ['postal code', 'post code', 'zip code', 'zip'],
     emergencyName: ['emergency contact name', 'emergency contact', 'next of kin name', 'next of kin', 'kin name'],
     emergencyPhone: ['emergency contact number', 'emergency phone', 'emergency cell', 'next of kin phone', 'kin cell'],
     bankName: ['bank name', 'banking institution', 'name of bank'],
     accountNumber: ['account number', 'bank account number', 'acc no', 'account no', 'bank account no'],
     branchCode: ['branch code', 'bank code', 'sort code'],
     accountType: ['account type', 'type of account'],
-    salesConsultant: ['sales consultant', 'consultant', 'sales rep', 'advisor', 'agent', 'rep name'],
-    membershipType: ['membership type', 'package', 'contract type', 'plan', 'membership option', 'product'],
-    memberId: ['membership number', 'member number', 'membership no', 'member id', 'account number', 'client code'],
-    clubName: ['home club', 'club', 'branch', 'facility', 'gym'],
-    idNumber: ['id number', 'id no', 'identity number', 'id', 'passport number', 'passport no', 'national id', 'rsa id'],
-    dob: ['date of birth', 'dob', 'birth date', 'birthdate'],
-    age: ['age'],
-    gender: ['gender', 'sex'],
-    mobilePhone: ['cell phone', 'cell number', 'cellphone', 'mobile number', 'mobile', 'cell', 'contact number', 'phone number', 'phone'],
-    homePhone: ['home phone', 'tel home', 'telephone (h)', 'telephone home', 'landline'],
-    workPhone: ['work phone', 'tel work', 'telephone (w)', 'telephone work', 'office phone'],
-    email: ['email address', 'e-mail address', 'email', 'e-mail'],
-    streetAddress: ['street address', 'physical address', 'residential address', 'address line 1', 'address 1', 'street'],
-    suburb: ['suburb', 'area', 'neighborhood'],
-    city: ['city', 'town'],
-    province: ['province', 'state', 'region'],
-    postalCode: ['postal code', 'post code', 'zip code', 'zip'],
-    firstName: ['first name', 'firstname', 'given name', 'forename'],
-    lastName: ['last name', 'lastname', 'surname', 'family name'],
-    title: ['title', 'salutation'],
-    fullName: ['full name', 'client full name', 'member full name', 'customer name', 'client name', 'member name', 'name']
+    fullName: ['full name', 'client full name', 'member full name', 'customer name', 'client name', 'name']
   };
 
   // Helper: Clean text
@@ -46,9 +53,271 @@
     return (str || '').toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
+  // Format Date as YYYY-MM-DD
+  function formatDateYYYYMMDD(d) {
+    if (!d || isNaN(d.getTime())) return '';
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // Parse various date strings (e.g. "Monday, 14 September 2026" or "1984/07/26")
+  function parseToYYYYMMDD(dateStr) {
+    if (!dateStr) return '';
+    const cleanStr = dateStr.replace(/^[A-Za-z]+,\s*/, '').trim();
+    const parsed = new Date(cleanStr);
+    if (!isNaN(parsed.getTime())) {
+      return formatDateYYYYMMDD(parsed);
+    }
+    const slashParts = cleanStr.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
+    if (slashParts) {
+      return `${slashParts[1]}-${slashParts[2].padStart(2, '0')}-${slashParts[3].padStart(2, '0')}`;
+    }
+    return '';
+  }
+
+  // Intelligent split of name into Member Name (forenames) and Member Surname
+  function splitFullName(rawName) {
+    if (!rawName) return { memberName: '', memberSurname: '' };
+
+    let cleanName = rawName.replace(/^(?:MR|MRS|MS|MISS|DR|PROF|REV|PASTOR)\.?\s+/i, '').trim();
+    cleanName = cleanName.replace(/\s*\(\d+\)\s*$/, '').trim();
+
+    const parts = cleanName.split(/\s+/);
+    if (parts.length <= 1) {
+      return { memberName: cleanName, memberSurname: '' };
+    }
+
+    const surnamePrefixes = [
+      'van der merwe', 'van der walt', 'van der westhuizen', 'van der linde', 'van der berg',
+      'van der', 'van den', 'van de', 'van eerden', 'van eeden', 'van dyk', 'van wyk',
+      'van zyl', 'van niekerk', 'van staden', 'van rooyen', 'van heerden', 'van vuuren',
+      'van rensburg', 'janse van rensburg', 'du plessis', 'du toit', 'du preez', 'du randt',
+      'de villiers', 'de beer', 'de klerk', 'de wet', 'de jager', 'de bruyn', 'de kock',
+      'de', 'du', 'le roux', 'le', 'la', 'von', 'del'
+    ];
+
+    const lowerName = cleanName.toLowerCase();
+    for (const prefix of surnamePrefixes) {
+      const target = ' ' + prefix;
+      const idx = lowerName.lastIndexOf(target);
+      if (idx !== -1) {
+        const forename = cleanName.slice(0, idx).trim();
+        const surname = cleanName.slice(idx + 1).trim();
+        if (forename && surname) {
+          return { memberName: forename, memberSurname: surname };
+        }
+      }
+    }
+
+    const surname = parts[parts.length - 1];
+    const forename = parts.slice(0, parts.length - 1).join(' ');
+    return { memberName: forename, memberSurname: surname };
+  }
+
+  // Dedicated extractor for the Member Details page structure
+  function extractFromMemberDetailsPage() {
+    const profile = {};
+
+    // 1. CM# (Customer ID): Located directly in #leftColumn h2 small
+    // Strictly preserve prefix word (like "JEF" or "EDGE") and digits intact e.g. "JEF33350"
+    const cmSmall = document.querySelector('#leftColumn h2 small, h2 small');
+    if (cmSmall) {
+      const cmText = clean(cmSmall.innerText || cmSmall.textContent);
+      if (cmText) {
+        profile.cmNumber = cmText;
+      }
+    }
+    if (!profile.cmNumber) {
+      const leftCol = document.getElementById('leftColumn');
+      if (leftCol) {
+        const match = leftCol.innerText.match(/\b((?:JEF|EDGE|[A-Z]{3,4})\d{4,8}|\d{5,10})\b/i);
+        if (match) profile.cmNumber = match[1];
+      }
+    }
+
+    // 2. Member Name & Member Surname: From #leftColumn h2 or .title h1
+    let rawNameText = '';
+    const h2Elem = document.querySelector('#leftColumn h2');
+    if (h2Elem) {
+      const clone = h2Elem.cloneNode(true);
+      const smallTags = clone.querySelectorAll('small');
+      smallTags.forEach(s => s.remove());
+      rawNameText = clean(clone.innerText || clone.textContent);
+    }
+    if (!rawNameText) {
+      const titleH1 = document.querySelector('.title h1');
+      if (titleH1) rawNameText = clean(titleH1.innerText || titleH1.textContent);
+    }
+
+    if (rawNameText) {
+      const { memberName, memberSurname } = splitFullName(rawNameText);
+      profile.memberName = memberName;
+      profile.memberSurname = memberSurname;
+      profile.fullName = [memberName, memberSurname].filter(Boolean).join(' ');
+    }
+
+    // 3. Contact# (Mobile / Telephone): From #member-contact
+    const contactBlock = document.getElementById('member-contact');
+    if (contactBlock) {
+      const pElements = contactBlock.querySelectorAll('p');
+      pElements.forEach(p => {
+        const txt = p.innerText || p.textContent || '';
+        if (/Mobile:/i.test(txt) && !profile.contactNumber) {
+          const numMatch = txt.replace(/Mobile:/i, '').match(/(?:\+27|0)\d{9}/);
+          if (numMatch) {
+            profile.contactNumber = numMatch[0];
+          } else {
+            const rawVal = clean(txt.replace(/Mobile:/i, ''));
+            if (rawVal) profile.contactNumber = rawVal.replace(/[^\d+]/g, '');
+          }
+        } else if (/Telephone:/i.test(txt) && !profile.contactNumber) {
+          const numMatch = txt.replace(/Telephone:/i, '').match(/(?:\+27|0)\d{9}/);
+          if (numMatch) {
+            profile.contactNumber = numMatch[0];
+          } else {
+            const rawVal = clean(txt.replace(/Telephone:/i, ''));
+            if (rawVal) profile.contactNumber = rawVal.replace(/[^\d+]/g, '');
+          }
+        } else if (/Email:/i.test(txt) && !profile.emailAddress) {
+          // 4. Email Address: First email if semicolon or comma separated
+          const rawEmail = clean(txt.replace(/Email:/i, ''));
+          const firstEmail = rawEmail.split(/[;,]/)[0].trim();
+          if (firstEmail) profile.emailAddress = firstEmail;
+        } else if (/DOB:/i.test(txt) && !profile.dob) {
+          const match = txt.match(/\b\d{4}[/-]\d{2}[/-]\d{2}\b/);
+          if (match) profile.dob = match[0].replace(/\//g, '-');
+        } else if (/Address:/i.test(txt)) {
+          const addrLines = p.innerText.replace(/Address:\s*/i, '').split('\n').map(s => s.trim()).filter(Boolean);
+          if (addrLines.length > 0) {
+            profile.streetAddress = addrLines.slice(0, Math.max(1, addrLines.length - 3)).join(', ');
+            if (addrLines.length >= 2) {
+              const lastLine = addrLines[addrLines.length - 1];
+              if (/^\d{4}$/.test(lastLine)) {
+                profile.postalCode = lastLine;
+                if (addrLines.length >= 3) profile.province = addrLines[addrLines.length - 2];
+                if (addrLines.length >= 4) profile.city = addrLines[addrLines.length - 3];
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 5. Date Loaded: Auto-generated current date in YYYY-MM-DD
+    profile.dateLoaded = formatDateYYYYMMDD(new Date());
+
+    // 6. Branch: From Google Analytics or selectors
+    const pageScripts = Array.from(document.querySelectorAll('script')).map(s => s.textContent || '').join('\n');
+    const branchGaMatch = pageScripts.match(/ga\s*\(\s*['"]set['"]\s*,\s*['"]Branch['"]\s*,\s*['"]([^'"]+)['"]\s*\)/i);
+    if (branchGaMatch) {
+      profile.branch = branchGaMatch[1].trim();
+    } else {
+      const branchOption = document.querySelector('select#Branch option[selected], option[value*="CLUB -"]');
+      if (branchOption) {
+        profile.branch = clean(branchOption.innerText || branchOption.textContent).replace(/^CLUB\s*-\s*/i, '');
+      }
+    }
+
+    // 7. Consultant: From GA User or headerLinks logged-in user
+    const consultantGaMatch = pageScripts.match(/ga\s*\(\s*['"]set['"]\s*,\s*['"]User['"]\s*,\s*['"]([^'"]+)['"]\s*\)/i);
+    const headerUser = document.querySelector('#headerLinks li:first-child');
+    if (headerUser && headerUser.innerText && !headerUser.querySelector('a')) {
+      const userParts = clean(headerUser.innerText).split(/\s+/);
+      profile.consultant = userParts[0].charAt(0).toUpperCase() + userParts[0].slice(1).toLowerCase();
+    } else if (consultantGaMatch) {
+      const rawUser = consultantGaMatch[1].split('.')[0];
+      profile.consultant = rawUser.charAt(0).toUpperCase() + rawUser.slice(1).toLowerCase();
+    }
+
+    // 8. Active Membership Details (Member Type, Period, Value, 1st D/O Date)
+    const activeMembership = document.querySelector('.membershipDetail:not(.membershipFinishedCancelled)');
+    if (activeMembership) {
+      const pkgLink = activeMembership.querySelector('h3 a:not(.action)');
+      if (pkgLink) {
+        profile.memberType = clean(pkgLink.innerText || pkgLink.textContent);
+      }
+
+      if (profile.memberType) {
+        const periodMatch = profile.memberType.match(/(\d+)\s*(MONTH|YEAR|WEEK|DAY)S?/i);
+        if (periodMatch) {
+          const unit = periodMatch[2].charAt(0).toUpperCase() + periodMatch[2].slice(1).toLowerCase();
+          profile.period = `${periodMatch[1]} ${unit}`;
+        }
+      }
+
+      const paidMatch = activeMembership.innerText.match(/Paid:\s*R?\s*([0-9.,]+)/i);
+      if (paidMatch) {
+        let valStr = paidMatch[1].replace(/\s+/g, '').replace(',', '.');
+        profile.value = valStr;
+      }
+
+      const startMatch = activeMembership.innerText.match(/Start:\s*([^\r\n<]+)/i);
+      if (startMatch) {
+        const parsedDate = parseToYYYYMMDD(startMatch[1]);
+        if (parsedDate) profile.firstDoDate = parsedDate;
+      }
+    }
+
+    // 9. Notes: From .memberNotes or access number
+    const notesElem = document.querySelector('.memberNotes');
+    if (notesElem) {
+      profile.notes = clean(notesElem.innerText || notesElem.textContent);
+    } else {
+      const accessElem = document.querySelector('#communicationMemberBar h3.filter');
+      if (accessElem) profile.notes = clean(accessElem.innerText || accessElem.textContent);
+    }
+
+    // 10. ID Number: From .title h1 strong.grey
+    const idElem = document.querySelector('.title h1 strong.grey');
+    if (idElem) {
+      const idMatch = idElem.innerText.match(/\b\d{13}\b/);
+      if (idMatch) profile.idNumber = idMatch[0];
+    }
+
+    // Provide friendly canonical aliases
+    if (profile.cmNumber) {
+      profile.cm = profile.cmNumber;
+      profile.memberId = profile.cmNumber;
+    }
+    if (profile.contactNumber) {
+      profile.mobilePhone = profile.contactNumber;
+      profile.contact = profile.contactNumber;
+    }
+    if (profile.emailAddress) {
+      profile.email = profile.emailAddress;
+    }
+    if (profile.memberType) {
+      profile.membershipType = profile.memberType;
+    }
+    if (profile.consultant) {
+      profile.salesConsultant = profile.consultant;
+    }
+
+    return profile;
+  }
+
   // Scrape structured label-value pairs from the page DOM
   function extractProfileFromDOM() {
-    const profile = {};
+    // Check if on Member Details page first
+    const isMemberPage = Boolean(
+      document.querySelector('#leftColumn h2') ||
+      document.querySelector('.membershipDetail') ||
+      document.querySelector('#member-contact') ||
+      (document.title && document.title.includes('Member Details'))
+    );
+
+    let profile = {};
+    if (isMemberPage) {
+      profile = extractFromMemberDetailsPage();
+    }
+
+    // If core fields found, return immediately
+    if (profile.cmNumber || profile.memberName || profile.contactNumber) {
+      return profile;
+    }
+
     const processedElements = new Set();
 
     // Strategy 1: Find DL / DT / DD definitions
@@ -407,7 +676,7 @@
         profile: profile
       });
 
-      const clientName = profile.fullName || profile.firstName || 'Client';
+      const clientName = profile.fullName || [profile.memberName, profile.memberSurname].filter(Boolean).join(' ') || 'Client';
       showToast(`✓ <b>HOTCOPY:</b> Captured ${count} details for <b>${clientName}</b>! Ready to paste.`);
       return { success: true, count, profile };
     } catch (err) {
@@ -439,6 +708,7 @@
   // Expose on window for debugging if needed
   window.__edgeAssistantScraper = {
     extractProfileFromDOM,
+    extractFromMemberDetailsPage,
     runScrapeAndSave,
     startElementPicker
   };

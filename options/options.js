@@ -14,30 +14,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveToast = document.getElementById('save-toast');
 
   const AVAILABLE_FIELDS = [
-    { key: 'fullName', label: 'Full Name' },
-    { key: 'firstName', label: 'First Name' },
-    { key: 'lastName', label: 'Last Name' },
-    { key: 'title', label: 'Title / Salutation' },
+    { key: 'cmNumber', label: 'CM# (Customer ID)' },
+    { key: 'memberName', label: 'Member Name (First Name)' },
+    { key: 'memberSurname', label: 'Member Surname (Last Name)' },
+    { key: 'contactNumber', label: 'Contact# (Phone/Cell)' },
+    { key: 'emailAddress', label: 'Email Address' },
+    { key: 'dateLoaded', label: 'Date Loaded' },
+    { key: 'branch', label: 'Branch' },
+    { key: 'consultant', label: 'Consultant' },
+    { key: 'source', label: 'Source' },
+    { key: 'outcome', label: 'Outcome' },
+    { key: 'memberType', label: 'Member Type (Package)' },
+    { key: 'period', label: 'Period' },
+    { key: 'value', label: 'Value' },
+    { key: 'firstDoDate', label: '1st D/O Date' },
+    { key: 'notes', label: 'Notes' },
     { key: 'idNumber', label: 'ID / Passport Number' },
     { key: 'dob', label: 'Date of Birth' },
     { key: 'gender', label: 'Gender' },
-    { key: 'mobilePhone', label: 'Cell / Mobile Phone' },
-    { key: 'homePhone', label: 'Home Phone' },
-    { key: 'workPhone', label: 'Work Phone' },
-    { key: 'email', label: 'Email Address' },
     { key: 'streetAddress', label: 'Street Address' },
     { key: 'suburb', label: 'Suburb / Area' },
     { key: 'city', label: 'City / Town' },
     { key: 'postalCode', label: 'Postal Code' },
-    { key: 'memberId', label: 'Member / Client ID' },
-    { key: 'clubName', label: 'Home Club / Facility' },
-    { key: 'membershipType', label: 'Membership / Package' },
-    { key: 'salesConsultant', label: 'Sales Consultant' },
     { key: 'emergencyName', label: 'Emergency Contact Name' },
     { key: 'emergencyPhone', label: 'Emergency Contact Phone' },
     { key: 'bankName', label: 'Bank Name' },
     { key: 'accountNumber', label: 'Account Number' },
-    { key: 'branchCode', label: 'Branch Code' }
+    { key: 'branchCode', label: 'Branch Code' },
+    { key: 'fullName', label: 'Full Name' }
   ];
 
   // Load existing settings
@@ -81,11 +85,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } else {
     // Helpful starter presets
-    renderRow('fullName', ['client_name', 'member_name', 'full_name']);
-    renderRow('idNumber', ['sa_id', 'id_number', 'passport_no']);
-    renderRow('mobilePhone', ['contact_number', 'cellular', 'mobile_phone']);
-    renderRow('email', ['email_address', 'e_mail']);
-    renderRow('memberId', ['club_id', 'membership_no']);
+    renderRow('cmNumber', ['cm', 'customer_id', 'client_code']);
+    renderRow('memberName', ['first_name', 'given_name', 'member_name']);
+    renderRow('memberSurname', ['surname', 'last_name', 'family_name']);
+    renderRow('contactNumber', ['mobile', 'cell', 'phone', 'contact_no']);
+    renderRow('emailAddress', ['email', 'email_address']);
   }
 
   // Add row

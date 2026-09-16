@@ -36,7 +36,9 @@ Instead of switching tabs 15 times per sale or transaction, HOTCOPY does the ent
 
 ## ✨ Key Features
 
-* **⚡ 1-Click Smart Profile Scraper**: Automatically identifies names, national ID/passport numbers, birth dates, phone numbers, email addresses, street addresses, postal codes, membership codes, banking info, and emergency contacts.
+* **⚡ 1-Click Smart Profile Scraper**: Automatically identifies customer IDs (`CM#`), names, forenames, compound surnames, phone numbers, emails, packages, values, debit order dates, notes, and addresses.
+* **🏷️ Exact Customer ID Fidelity**: Preserves all prefix letters and codes (e.g., `JEF33350`, `EDGE89037`) together with numeric IDs without truncating.
+* **🛠️ Modern Web App & Modal Automation**: Tailored for Google Apps Script Web Apps, Vue 3, and Vuetify 3. Automatically triggers reactive state updates (`v-model`), floating label animations, and can even auto-open "+ New Item" modals directly from the dock.
 * **📋 Interactive Click-to-Fill Dropdown**: When clicking into any input, textarea, or dropdown, a clean menu pops up showing all captured details. Click any value to instantly fill it without leaving the field.
 * **⏩ Rapid Tab-to-Advance Navigation**: Pressing <kbd>Tab</kbd> locks in the current field value and moves directly to the next eligible form input, automatically preparing the next detail.
 * **🛳️ Always-On-Top Draggable Window**: Once activated, a lightweight floating window stays visible and on top across all your browser tabs (`z-index: 2147483647`). Includes a drag handle (`⠿`) so you can move it anywhere on your screen.

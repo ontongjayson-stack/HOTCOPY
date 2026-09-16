@@ -16,13 +16,24 @@
   let currentMatchedField = null;
   let suppressFocusHandling = false;
 
-  // Strict semantic synonyms for field identification (avoiding greedy false-positives)
+  // Strict semantic synonyms for field identification (prioritizing the 15 Sales App fields)
   const FIELD_SYNONYMS = {
-    email: ['email address', 'e-mail address', 'email', 'e-mail', 'mail address'],
+    dateLoaded: ['date loaded', 'loaded date', 'date_loaded', 'dateloaded', 'loaded'],
+    branch: ['branch', 'club', 'home club', 'facility', 'gym'],
+    consultant: ['consultant', 'sales consultant', 'advisor', 'agent', 'sales rep', 'rep', 'consultant name'],
+    cmNumber: ['cm#', 'cm', 'cm no', 'cm number', 'customer id', 'client code', 'client id', 'member id', 'membership number', 'membership no'],
+    memberName: ['member name', 'first name', 'firstname', 'given name', 'forename'],
+    memberSurname: ['member surname', 'surname', 'last name', 'lastname', 'family name'],
+    contactNumber: ['contact#', 'contact number', 'contact no', 'contact', 'mobile number', 'mobile phone', 'mobile', 'cell phone', 'cell number', 'cellphone', 'cell', 'phone', 'phone number'],
+    emailAddress: ['email address', 'email', 'e mail', 'e-mail address', 'e-mail', 'mail address'],
+    source: ['source', 'lead source', 'referral source', 'enquiry source'],
+    outcome: ['outcome', 'result', 'sales outcome'],
+    memberType: ['member type', 'membership type', 'package', 'package name', 'contract type', 'plan', 'membership option', 'product option'],
+    period: ['period', 'duration', 'term', 'months'],
+    value: ['value', 'amount', 'price', 'fee', 'cost', 'paid'],
+    firstDoDate: ['1st d/o date', '1st do date', 'first do date', 'd/o date', 'debit order date', 'first debit order date', 'start date', 'commencement date'],
+    notes: ['notes', 'note', 'comments', 'comment', 'description', 'remarks', 'access number'],
     idNumber: ['id number', 'identity number', 'id no', 'national id', 'rsa id', 'sa id', 'passport number', 'passport no', 'passport', 'id/passport', 'identification'],
-    mobilePhone: ['cell phone', 'cell number', 'cellphone', 'mobile number', 'mobile phone', 'cellular', 'contact number', 'phone number', 'contact no', 'cell', 'mobile'],
-    homePhone: ['home phone', 'tel home', 'telephone (h)', 'telephone home', 'landline'],
-    workPhone: ['work phone', 'tel work', 'telephone (w)', 'telephone work', 'office phone'],
     dob: ['date of birth', 'dob', 'birth date', 'birthdate'],
     gender: ['gender', 'sex'],
     streetAddress: ['street address', 'residential address', 'physical address', 'street', 'address line 1', 'address 1', 'home address'],
@@ -30,41 +41,40 @@
     city: ['city', 'town'],
     province: ['province', 'state', 'region'],
     postalCode: ['postal code', 'post code', 'zip code', 'zip', 'postal'],
-    memberId: ['membership number', 'member number', 'membership no', 'member id', 'membership id', 'club id', 'contract number', 'client code'],
-    membershipType: ['membership type', 'package', 'package name', 'contract type', 'plan', 'membership option', 'product option'],
-    salesConsultant: ['sales consultant', 'consultant', 'sales rep', 'advisor', 'agent', 'sales person', 'consultant name'],
     emergencyName: ['emergency contact name', 'emergency name', 'next of kin name', 'next of kin', 'kin name'],
     emergencyPhone: ['emergency contact number', 'emergency phone', 'emergency cell', 'emergency contact no', 'kin phone', 'kin cell'],
     bankName: ['bank name', 'banking institution', 'name of bank'],
     accountNumber: ['bank account number', 'account number', 'acc no', 'account no', 'bank account no'],
     branchCode: ['branch code', 'bank code', 'sort code'],
     accountType: ['account type', 'type of account'],
-    firstName: ['first name', 'firstname', 'given name', 'forename'],
-    lastName: ['last name', 'lastname', 'surname', 'family name'],
     fullName: ['full name', 'client full name', 'member full name', 'customer name', 'applicant name', 'candidate name']
   };
 
   const FIELD_ICONS = {
+    dateLoaded: '📅',
+    branch: '🏢',
+    consultant: '💼',
+    cmNumber: '🪪',
+    memberName: '👤',
+    memberSurname: '👤',
+    contactNumber: '📱',
+    emailAddress: '✉️',
+    source: '🌐',
+    outcome: '🎯',
+    memberType: '📋',
+    period: '⏳',
+    value: '💰',
+    firstDoDate: '📅',
+    notes: '📝',
     fullName: '👤',
-    firstName: '👤',
-    lastName: '👤',
-    title: '🏷️',
     idNumber: '🪪',
-    dob: '📅',
+    dob: '🎂',
     gender: '⚧',
-    mobilePhone: '📱',
-    homePhone: '📞',
-    workPhone: '☎️',
-    email: '✉️',
     streetAddress: '🏠',
     suburb: '📍',
     city: '🏙️',
     province: '🗺️',
     postalCode: '📮',
-    memberId: '💳',
-    clubName: '🏋️',
-    membershipType: '📋',
-    salesConsultant: '💼',
     emergencyName: '🚨',
     emergencyPhone: '🚨',
     bankName: '🏦',
@@ -117,6 +127,13 @@
   // Precise contextual clue extraction (prevents container leakage)
   function getElementClues(el) {
     const clues = [];
+
+    // 0. Vuetify 3 label & container detection
+    const vField = el.closest('.v-field, .v-input');
+    if (vField) {
+      const vLabel = vField.querySelector('.v-field-label, .v-label, label');
+      if (vLabel && vLabel.innerText) clues.push(vLabel.innerText);
+    }
 
     // 1. Direct label via for attribute
     if (el.id) {
@@ -182,7 +199,7 @@
       }
     }
 
-    return clues.join(' ').toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+    return clues.join(' ').toLowerCase().replace(/[^a-z0-9#]/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
   // Find best matching profile field with strict confidence check
@@ -216,11 +233,19 @@
         }
 
         // Substring / word boundary check
-        const regex = new RegExp(`\\b${syn}\\b`, 'i');
+        const regex = new RegExp(`(^|\\s)${syn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`, 'i');
         if (regex.test(elementClues)) {
-          // Special safeguard: prevent 'fullName' matching if clue also has words for other fields
+          // Safeguard: prevent memberName matching if clue specifies surname/last
+          if (field === 'memberName' && /\b(surname|last)\b/i.test(elementClues)) {
+            continue;
+          }
+          // Safeguard: prevent memberSurname matching if clue specifies first/forename
+          if (field === 'memberSurname' && /\b(first|forename|given)\b/i.test(elementClues)) {
+            continue;
+          }
+          // Safeguard: prevent 'fullName' matching if clue is for specific subfields
           if (field === 'fullName') {
-            if (/\b(first|last|surname|bank|emergency|kin|rep|consultant|package|plan|user|file)\b/i.test(elementClues)) {
+            if (/\b(first|last|surname|member name|member surname|bank|emergency|kin|rep|consultant|package|plan|user|file)\b/i.test(elementClues)) {
               continue;
             }
           }
@@ -237,7 +262,9 @@
     // Also check generic 'name' keyword if no other field claimed it
     if (!bestField && /\bname\b/i.test(elementClues)) {
       if (!/\b(bank|emergency|kin|rep|consultant|package|file)\b/i.test(elementClues)) {
-        if (activeProfile.fullName) {
+        if (activeProfile.memberName) {
+          return { field: 'memberName', value: activeProfile.memberName, score: 75 };
+        } else if (activeProfile.fullName) {
           return { field: 'fullName', value: activeProfile.fullName, score: 75 };
         }
       }
@@ -246,7 +273,7 @@
     return highestScore >= 70 ? bestField : null;
   }
 
-  // Reliable field value setter for modern frameworks
+  // Reliable field value setter for modern frameworks (including Vue 3 & Vuetify 3)
   function setFieldValue(el, value) {
     if (!el || value === undefined || value === null) return;
 
@@ -286,9 +313,16 @@
       }
     }
 
-    // Dispatch DOM events
+    // Dispatch DOM events for Vue 3 reactivity
     el.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // Vuetify 3 floating label and dirty/active states
+    const vField = el.closest('.v-field');
+    if (vField) {
+      vField.classList.add('v-field--active', 'v-field--dirty', 'v-field--has-value');
+      vField.classList.remove('v-field--empty');
+    }
 
     if (userSettings.highlightFilled) {
       el.classList.add('edge-field-autofilled');
@@ -509,14 +543,35 @@
     }
   }
 
+  // Locate the "+ NEW ITEM" button on the Sales App
+  function findNewItemButton() {
+    const buttons = Array.from(document.querySelectorAll('button, .v-btn, [role="button"], a.btn'));
+    return buttons.find(b => {
+      const txt = (b.innerText || b.textContent || '').trim().toLowerCase();
+      return txt.includes('new item') || txt.includes('new record') || txt.includes('add item');
+    }) || null;
+  }
+
   // Autofill all detected fields across the form
-  function autofillAllFields() {
+  async function autofillAllFields() {
     if (!activeProfile) {
       alert('HOTCOPY: No client profile captured yet. Please capture a profile first.');
       return;
     }
 
-    const inputs = document.querySelectorAll('input:not([type="hidden"]):not([disabled]):not([readonly]), select:not([disabled]), textarea:not([disabled])');
+    // If modal dialog is not open, check if "New Item" button is available
+    const openDialog = document.querySelector('.v-dialog:not([style*="display: none"]), [role="dialog"]');
+    if (!openDialog) {
+      const newItemBtn = findNewItemButton();
+      if (newItemBtn) {
+        newItemBtn.click();
+        // Wait for Vuetify modal transition
+        await new Promise(resolve => setTimeout(resolve, 350));
+      }
+    }
+
+    const scope = document.querySelector('.v-dialog:not([style*="display: none"]), [role="dialog"]') || document.body;
+    const inputs = scope.querySelectorAll('input:not([type="hidden"]):not([disabled]):not([readonly]), select:not([disabled]), textarea:not([disabled])');
     let filledCount = 0;
 
     inputs.forEach(el => {
@@ -602,9 +657,13 @@
       return;
     }
 
-    const clientName = activeProfile.fullName || activeProfile.firstName || 'Client Profile';
+    const clientName = activeProfile.fullName || [activeProfile.memberName, activeProfile.memberSurname].filter(Boolean).join(' ') || activeProfile.firstName || 'Client Profile';
     const fieldCount = Object.keys(activeProfile).filter(k => !k.startsWith('_')).length;
     const logoUrl = chrome.runtime.getURL('icons/icon-32.png');
+    const hasNewItemBtn = Boolean(findNewItemButton());
+    const newItemButtonHtml = hasNewItemBtn
+      ? `<button class="dock-btn" id="edge-dock-new-item" title="Open Sales New Item modal">➕ New Item</button>`
+      : '';
 
     if (!dock) {
       dock = document.createElement('div');
@@ -621,6 +680,7 @@
         <span class="dock-meta">${fieldCount} details active</span>
       </div>
       <div class="dock-actions">
+        ${newItemButtonHtml}
         <button class="dock-btn primary" id="edge-dock-fill-all" title="Autofill all mapped fields on this form">
           ⚡ Fill All
         </button>
@@ -632,6 +692,16 @@
         </button>
       </div>
     `;
+
+    if (hasNewItemBtn) {
+      const newItemBtnEl = dock.querySelector('#edge-dock-new-item');
+      if (newItemBtnEl) {
+        newItemBtnEl.addEventListener('click', () => {
+          const btn = findNewItemButton();
+          if (btn) btn.click();
+        });
+      }
+    }
 
     dock.querySelector('#edge-dock-fill-all').addEventListener('click', () => autofillAllFields());
 

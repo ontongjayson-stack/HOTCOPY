@@ -58,18 +58,81 @@ document.addEventListener('DOMContentLoaded', async () => {
       emptyState.style.display = 'none';
       clientCard.style.display = 'block';
 
-      const name = profile.fullName || [profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'Unnamed Client';
+      const name = profile.fullName || [profile.memberName, profile.memberSurname].filter(Boolean).join(' ') || 'Unnamed Client';
       clientName.innerText = name;
-      clientId.innerText = profile.idNumber ? `ID: ${profile.idNumber}` : (profile.memberId ? `Member: ${profile.memberId}` : 'Profile Active');
+      const cmText = profile.cmNumber || profile.memberId;
+      clientId.innerText = cmText ? `CM#: ${cmText}` : (profile.idNumber ? `ID: ${profile.idNumber}` : 'Profile Active');
 
-      // Populate fields
+      // Canonical display order matching the Sales App
+      const DISPLAY_ORDER = [
+        'dateLoaded',
+        'branch',
+        'consultant',
+        'cmNumber',
+        'memberName',
+        'memberSurname',
+        'contactNumber',
+        'emailAddress',
+        'source',
+        'outcome',
+        'memberType',
+        'period',
+        'value',
+        'firstDoDate',
+        'notes',
+        'idNumber'
+      ];
+
+      const FIELD_LABELS = {
+        dateLoaded: 'Date Loaded',
+        branch: 'Branch',
+        consultant: 'Consultant',
+        cmNumber: 'CM#',
+        memberName: 'Member Name',
+        memberSurname: 'Member Surname',
+        contactNumber: 'Contact#',
+        emailAddress: 'Email Address',
+        source: 'Source',
+        outcome: 'Outcome',
+        memberType: 'Member Type',
+        period: 'Period',
+        value: 'Value',
+        firstDoDate: '1st D/O Date',
+        notes: 'Notes',
+        idNumber: 'ID Number'
+      };
+
+      const ALIASES = new Set(['_capturedAt', 'cm', 'contact', 'mobilePhone', 'email', 'membershipType', 'salesConsultant', 'memberId', 'fullName']);
+
+      // Populate fields in structured order
       fieldList.innerHTML = '';
+      const renderedKeys = new Set();
+
+      DISPLAY_ORDER.forEach(key => {
+        const value = profile[key];
+        if (value && typeof value === 'string') {
+          renderedKeys.add(key);
+          const row = document.createElement('div');
+          row.className = 'field-row';
+          const label = FIELD_LABELS[key] || key;
+
+          row.innerHTML = `
+            <div class="field-info">
+              <span class="field-key">${label}</span>
+              <span class="field-val" title="${value}">${value}</span>
+            </div>
+            <button class="btn-copy" data-val="${encodeURIComponent(value)}" title="Copy to clipboard">Copy</button>
+          `;
+          fieldList.appendChild(row);
+        }
+      });
+
+      // Append any remaining custom or unmapped fields
       for (const [key, value] of Object.entries(profile)) {
-        if (key.startsWith('_') || !value || typeof value !== 'string') continue;
+        if (renderedKeys.has(key) || ALIASES.has(key) || key.startsWith('_') || !value || typeof value !== 'string') continue;
 
         const row = document.createElement('div');
         row.className = 'field-row';
-
         const readableKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 
         row.innerHTML = `
@@ -79,7 +142,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
           <button class="btn-copy" data-val="${encodeURIComponent(value)}" title="Copy to clipboard">Copy</button>
         `;
-
         fieldList.appendChild(row);
       }
 
