@@ -68,6 +68,79 @@ body {
   display: block;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.master-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-card);
+  padding: 3px 6px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+}
+
+.master-toggle-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-emerald);
+  min-width: 22px;
+}
+
+.master-toggle-label.off {
+  color: var(--text-secondary);
+}
+
+/* iOS Style Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #475569;
+  transition: .2s;
+  border-radius: 18px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 12px;
+  width: 12px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--accent-emerald);
+}
+
+input:checked + .slider:before {
+  transform: translateX(14px);
+}
+
 .status-pill {
   display: flex;
   align-items: center;
@@ -96,6 +169,59 @@ body {
 .status-pill.ready .status-dot {
   background-color: var(--accent-emerald);
   box-shadow: 0 0 6px var(--accent-emerald);
+}
+
+.status-pill.disabled {
+  border-color: rgba(100, 116, 139, 0.4);
+  background-color: rgba(100, 116, 139, 0.1);
+  color: #94a3b8;
+}
+
+/* WhatsApp Quick Bar in Active Profile */
+.client-wa-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(6, 78, 59, 0.35);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 10px 14px;
+}
+
+.wa-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wa-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #a7f3d0;
+}
+
+.wa-phone-preview {
+  font-family: monospace;
+  font-size: 11px;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.btn-wa-sm {
+  background: #10b981;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-wa-sm:hover {
+  background: #059669;
 }
 
 /* Action Bar */

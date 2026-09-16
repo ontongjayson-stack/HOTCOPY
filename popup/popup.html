@@ -16,9 +16,18 @@
         <span class="app-tagline">Profile Capture ➔ Form Autofill</span>
       </div>
     </div>
-    <div id="status-pill" class="status-pill idle">
-      <span class="status-dot"></span>
-      <span id="status-text">No Client Loaded</span>
+    <div class="header-controls">
+      <div id="status-pill" class="status-pill idle">
+        <span class="status-dot"></span>
+        <span id="status-text">No Client Loaded</span>
+      </div>
+      <div class="master-toggle-wrap" title="Enable / Disable HOTCOPY">
+        <label class="switch">
+          <input type="checkbox" id="chk-master-toggle" checked>
+          <span class="slider round"></span>
+        </label>
+        <span id="master-toggle-label" class="master-toggle-label">ON</span>
+      </div>
     </div>
   </header>
 
@@ -62,6 +71,17 @@
         <button id="btn-clear-profile" class="btn-icon-only text-danger" title="Clear this profile">✕</button>
       </div>
 
+      <!-- WhatsApp Quick Outreach Banner -->
+      <div id="client-wa-bar" class="client-wa-bar" style="display: none;">
+        <div class="wa-info">
+          <span class="wa-badge">💬 WhatsApp</span>
+          <span id="wa-phone-preview" class="wa-phone-preview">+27 82 123 4567</span>
+        </div>
+        <button id="btn-popup-whatsapp" class="btn btn-wa-sm" title="Initiate WhatsApp outreach chat">
+          Message ➔
+        </button>
+      </div>
+
       <div id="field-list" class="field-list">
         <!-- Dynamically injected fields -->
       </div>
@@ -98,8 +118,8 @@
 
     <div class="setting-item">
       <div class="setting-info">
-        <label class="setting-label">Floating Assistant Dock</label>
-        <span class="setting-desc">Display floating helper pill on web pages</span>
+        <label class="setting-label">Floating Movable Bubble</label>
+        <span class="setting-desc">Display draggable floating helper widget on web pages</span>
       </div>
       <input type="checkbox" id="chk-floating-dock" checked>
     </div>
@@ -112,7 +132,16 @@
       <input type="checkbox" id="chk-highlight" checked>
     </div>
 
+    <div class="setting-item">
+      <div class="setting-info">
+        <label class="setting-label">WhatsApp Auto-Dispatch Countdown</label>
+        <span class="setting-desc">Auto-send with 3s cancel timer (otherwise assisted pre-fill)</span>
+      </div>
+      <input type="checkbox" id="chk-wa-auto-send">
+    </div>
+
     <div class="settings-footer">
+      <button id="btn-reset-bubble" class="btn btn-outline full-width" style="margin-bottom: 8px;">Reset Bubble Position 📍</button>
       <button id="btn-open-options" class="btn btn-outline full-width">Advanced Field Mappings ⚙</button>
     </div>
   </section>

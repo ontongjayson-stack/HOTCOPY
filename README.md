@@ -36,15 +36,18 @@ Instead of switching tabs 15 times per sale or transaction, HOTCOPY does the ent
 
 ## ✨ Key Features
 
+* **🔘 Master ON/OFF Switch**: Instantly enable or disable HOTCOPY with a single toggle in the popup header. The icon badge dynamically reflects extension status ("OFF" in slate-gray when disabled, emerald initials when active).
+* **🫧 Draggable Collapsible Floating Bubble**: A sleek, non-intrusive circular bubble with an emerald pulse indicator that stays on top across pages. Drag it anywhere on screen — HOTCOPY automatically remembers your preferred coordinates across page reloads. Click to expand into the full action dock; click `−` to minimize back to a bubble.
+* **💬 1-Click WhatsApp Outreach Bridge**: Initiate direct WhatsApp Web chats with captured clients without adding them to your phone's address book or contacts. Automatically normalizes South African (`082...` ➔ `2782...`, `+27 (0)...`) and international phone numbers, personalizes message templates, and recycles open WhatsApp Web tabs to avoid RAM bloat.
+* **🛡️ Anti-Ban Human-in-the-Loop Protection**: Defaults to Assisted Pre-fill mode (pre-fills message for 1-click manual review), with an optional 3-second Auto-Dispatch countdown HUD with an instant `[Cancel]` button.
 * **⚡ 1-Click Smart Profile Scraper**: Automatically identifies customer IDs (`CM#`), names, forenames, compound surnames, phone numbers, emails, packages, values, debit order dates, notes, and addresses.
 * **🏷️ Exact Customer ID Fidelity**: Preserves all prefix letters and codes (e.g., `JEF33350`, `EDGE89037`) together with numeric IDs without truncating.
 * **🛠️ Modern Web App & Modal Automation**: Tailored for Google Apps Script Web Apps, Vue 3, and Vuetify 3. Automatically triggers reactive state updates (`v-model`), floating label animations, and can even auto-open "+ New Item" modals directly from the dock.
 * **📋 Interactive Click-to-Fill Dropdown**: When clicking into any input, textarea, or dropdown, a clean menu pops up showing all captured details. Click any value to instantly fill it without leaving the field.
 * **⏩ Rapid Tab-to-Advance Navigation**: Pressing <kbd>Tab</kbd> locks in the current field value and moves directly to the next eligible form input, automatically preparing the next detail.
-* **🛳️ Always-On-Top Draggable Window**: Once activated, a lightweight floating window stays visible and on top across all your browser tabs (`z-index: 2147483647`). Includes a drag handle (`⠿`) so you can move it anywhere on your screen.
 * **🔍 Interactive Visual Element Picker**: Found a unique or non-standard field on a page? Click **"Pick Element"** and click directly on the text on screen to save it instantly.
 * **⚡ One-Click "Fill All"**: Have a standard form with recognizable labels? Click **"⚡ Fill All"** or press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> to populate the entire form at once.
-* **⚙️ Customizable Field Aliases**: Add your own custom column names or field aliases in the Preferences dashboard.
+* **⚙️ Customizable Field Aliases & Outreach Templates**: Add your own custom column names, field aliases, and default WhatsApp greetings in the Preferences dashboard.
 * **🔒 100% Private & Local**: Zero external server calls, zero tracking, zero analytics. Your customer data never leaves your computer.
 
 ---

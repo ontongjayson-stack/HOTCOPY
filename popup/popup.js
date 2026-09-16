@@ -4,10 +4,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Elements
   const statusPill = document.getElementById('status-pill');
   const statusText = document.getElementById('status-text');
+  const chkMasterToggle = document.getElementById('chk-master-toggle');
+  const masterToggleLabel = document.getElementById('master-toggle-label');
+
   const emptyState = document.getElementById('empty-state');
   const clientCard = document.getElementById('client-card');
   const clientName = document.getElementById('client-name');
   const clientId = document.getElementById('client-id');
+  const clientWaBar = document.getElementById('client-wa-bar');
+  const waPhonePreview = document.getElementById('wa-phone-preview');
+  const btnPopupWhatsapp = document.getElementById('btn-popup-whatsapp');
+
   const fieldList = document.getElementById('field-list');
   const historyList = document.getElementById('history-list');
   const historyEmpty = document.getElementById('history-empty');
@@ -22,6 +29,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const chkTabJump = document.getElementById('chk-tab-jump');
   const chkFloatingDock = document.getElementById('chk-floating-dock');
   const chkHighlight = document.getElementById('chk-highlight');
+  const chkWaAutoSend = document.getElementById('chk-wa-auto-send');
+  const btnResetBubble = document.getElementById('btn-reset-bubble');
+
+  // Phone normalizer (E.164 digits)
+  function normalizePhone(rawPhone) {
+    if (!rawPhone || typeof rawPhone !== 'string') return null;
+    let cleaned = rawPhone.replace(/\(\s*0\s*\)/g, '').trim().replace(/[^\d+]/g, '');
+    if (cleaned.startsWith('00')) cleaned = '+' + cleaned.slice(2);
+    if (cleaned.startsWith('+')) {
+      const digits = cleaned.slice(1);
+      if (digits.startsWith('270') && digits.length === 12) return '27' + digits.slice(3);
+      return digits.length >= 8 && digits.length <= 15 ? digits : null;
+    }
+    if (cleaned.startsWith('0') && cleaned.length === 10) return '27' + cleaned.slice(1);
+    if (cleaned.startsWith('27') && cleaned.length === 11) return cleaned;
+    if (/^\d{7,15}$/.test(cleaned)) return cleaned;
+    return null;
+  }
 
   // Tab switching
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -42,14 +67,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     const history = data.profile_history || [];
     const settings = data.settings || {};
 
+    const isMasterEnabled = settings.masterEnabled !== false;
+    chkMasterToggle.checked = isMasterEnabled;
+    masterToggleLabel.innerText = isMasterEnabled ? 'ON' : 'OFF';
+    masterToggleLabel.className = `master-toggle-label ${isMasterEnabled ? '' : 'off'}`;
+
+    btnCapture.disabled = !isMasterEnabled;
+    btnPicker.disabled = !isMasterEnabled;
+    btnAutofill.disabled = !isMasterEnabled;
+
     // Settings
     chkAutoFill.checked = settings.autoFillOnFocus !== false;
     chkTabJump.checked = settings.tabJumpNext !== false;
     chkFloatingDock.checked = settings.showFloatingWidget !== false;
     chkHighlight.checked = settings.highlightFilled !== false;
+    if (chkWaAutoSend) chkWaAutoSend.checked = Boolean(settings.waAutoSend);
 
     // Active Profile UI
-    if (profile && (profile.fullName || profile.firstName || Object.keys(profile).length > 0)) {
+    if (!isMasterEnabled) {
+      statusPill.className = 'status-pill disabled';
+      statusText.innerText = 'Disabled';
+    } else if (profile && (profile.fullName || profile.firstName || Object.keys(profile).length > 0)) {
       if (data.dock_closed) {
         await chrome.storage.local.set({ dock_closed: false });
       }
@@ -62,6 +100,30 @@ document.addEventListener('DOMContentLoaded', async () => {
       clientName.innerText = name;
       const cmText = profile.cmNumber || profile.memberId;
       clientId.innerText = cmText ? `CM#: ${cmText}` : (profile.idNumber ? `ID: ${profile.idNumber}` : 'Profile Active');
+
+      // WhatsApp quick bar
+      const rawPhone = profile.contactNumber || profile.mobilePhone || profile.emergencyPhone;
+      const normalizedPhone = normalizePhone(rawPhone);
+      if (normalizedPhone) {
+        clientWaBar.style.display = 'flex';
+        waPhonePreview.innerText = `+${normalizedPhone}`;
+        btnPopupWhatsapp.onclick = async () => {
+          const firstName = profile.firstName || profile.memberName || (profile.fullName ? profile.fullName.split(' ')[0] : 'there');
+          const consultant = profile.consultant || profile.salesConsultant || 'Our Team';
+          const branch = profile.branch || 'our club';
+          const pkg = profile.memberType || profile.membershipType || 'membership';
+          const defaultMsg = `Hi ${firstName}, thank you for joining! This is ${consultant} from ${branch}. Your ${pkg} membership${cmText ? ` (CM#: ${cmText})` : ''} has been successfully processed. Please let us know if you have any questions!`;
+
+          await chrome.runtime.sendMessage({
+            type: 'OPEN_WHATSAPP_CHAT',
+            phone: normalizedPhone,
+            text: defaultMsg,
+            autoSend: settings.waAutoSend === true
+          });
+        };
+      } else {
+        clientWaBar.style.display = 'none';
+      }
 
       // Canonical display order matching the Sales App
       const DISPLAY_ORDER = [
@@ -276,6 +338,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   chkTabJump.addEventListener('change', () => saveSetting('tabJumpNext', chkTabJump.checked));
   chkFloatingDock.addEventListener('change', () => saveSetting('showFloatingWidget', chkFloatingDock.checked));
   chkHighlight.addEventListener('change', () => saveSetting('highlightFilled', chkHighlight.checked));
+  if (chkWaAutoSend) chkWaAutoSend.addEventListener('change', () => saveSetting('waAutoSend', chkWaAutoSend.checked));
+
+  // Master Toggle listener
+  chkMasterToggle.addEventListener('change', async () => {
+    await chrome.runtime.sendMessage({
+      type: 'SET_MASTER_ENABLED',
+      enabled: chkMasterToggle.checked
+    });
+    await refreshUI();
+  });
+
+  // Reset Bubble Position button
+  if (btnResetBubble) {
+    btnResetBubble.addEventListener('click', async () => {
+      await chrome.storage.local.remove('bubble_pos');
+      alert('Floating bubble position reset to default.');
+    });
+  }
 
   // Button: Open Options
   btnOptions.addEventListener('click', () => {

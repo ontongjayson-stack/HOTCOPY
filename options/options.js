@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const optTabJump = document.getElementById('opt-tab-jump');
   const optFloatingDock = document.getElementById('opt-floating-dock');
   const optHighlight = document.getElementById('opt-highlight');
+  const optWaAutoSend = document.getElementById('opt-wa-autosend');
+  const optWaTemplate = document.getElementById('opt-wa-template');
 
   const mappingTbody = document.getElementById('mapping-tbody');
   const btnAddMapping = document.getElementById('btn-add-mapping');
@@ -51,6 +53,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   optTabJump.checked = settings.tabJumpNext !== false;
   optFloatingDock.checked = settings.showFloatingWidget !== false;
   optHighlight.checked = settings.highlightFilled !== false;
+  if (optWaAutoSend) optWaAutoSend.checked = Boolean(settings.waAutoSend);
+  if (optWaTemplate) {
+    optWaTemplate.value = settings.waDefaultTemplate || "Hi {FirstName}, this is {Consultant} from {Branch}. Your membership ({Package}) has been successfully processed. Please let us know if you need anything!";
+  }
 
   // Render initial mappings
   function renderRow(fieldKey, keywords = []) {
@@ -99,12 +105,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Save changes
   btnSave.addEventListener('click', async () => {
-    const updatedSettings = {
+    const { settings: prevSettings = {} } = await chrome.storage.local.get('settings');
+    const updatedSettings = Object.assign({}, prevSettings, {
       autoFillOnFocus: optAutoFill.checked,
       tabJumpNext: optTabJump.checked,
       showFloatingWidget: optFloatingDock.checked,
-      highlightFilled: optHighlight.checked
-    };
+      highlightFilled: optHighlight.checked,
+      waAutoSend: optWaAutoSend ? optWaAutoSend.checked : false,
+      waDefaultTemplate: optWaTemplate ? optWaTemplate.value.trim() : ''
+    });
 
     const updatedMappings = {};
     const rows = mappingTbody.querySelectorAll('tr');

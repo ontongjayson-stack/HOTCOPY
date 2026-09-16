@@ -84,15 +84,19 @@
   };
 
   let dockClosed = false;
+  let dockCollapsed = false;
+  let bubblePos = null;
 
   // Initialize from storage
   async function init() {
     try {
-      const data = await chrome.storage.local.get(['active_profile', 'settings', 'custom_mappings', 'dock_closed']);
+      const data = await chrome.storage.local.get(['active_profile', 'settings', 'custom_mappings', 'dock_closed', 'bubble_pos', 'dock_collapsed']);
       if (data.active_profile) activeProfile = data.active_profile;
       if (data.settings) userSettings = Object.assign(userSettings, data.settings);
       if (data.custom_mappings) customMappings = data.custom_mappings;
       dockClosed = Boolean(data.dock_closed);
+      dockCollapsed = Boolean(data.dock_collapsed);
+      if (data.bubble_pos) bubblePos = data.bubble_pos;
 
       updateDockUI();
     } catch (e) {
@@ -105,9 +109,10 @@
     if (areaName !== 'local') return;
     if (changes.active_profile) {
       activeProfile = changes.active_profile.newValue || null;
-      // When a new profile is captured, re-open the dock
+      // When a new profile is captured, re-open the dock expanded
       if (activeProfile && changes.active_profile.oldValue !== activeProfile) {
         dockClosed = false;
+        dockCollapsed = false;
       }
       updateDockUI();
     }
@@ -115,8 +120,22 @@
       dockClosed = Boolean(changes.dock_closed.newValue);
       updateDockUI();
     }
+    if (changes.dock_collapsed !== undefined) {
+      dockCollapsed = Boolean(changes.dock_collapsed.newValue);
+      updateDockUI();
+    }
+    if (changes.bubble_pos !== undefined) {
+      bubblePos = changes.bubble_pos.newValue || null;
+      updateDockUI();
+    }
     if (changes.settings) {
       userSettings = Object.assign(userSettings, changes.settings.newValue || {});
+      if (userSettings.masterEnabled === false) {
+        removeDropdown();
+        removeInlineBadge();
+        const dock = document.getElementById('edge-assistant-dock');
+        if (dock) dock.remove();
+      }
       updateDockUI();
     }
     if (changes.custom_mappings) {
@@ -487,6 +506,7 @@
 
   // Handle click / focus on form elements
   function handleElementInteraction(e) {
+    if (userSettings.masterEnabled === false) return;
     const el = e.target;
     if (!el || !el.matches || !el.matches('input, select, textarea')) return;
     if (el.type === 'hidden' || el.type === 'submit' || el.type === 'button') return;
@@ -519,6 +539,7 @@
 
   // Handle keyboard events (Tab to advance, Esc to close)
   function handleKeyDown(e) {
+    if (userSettings.masterEnabled === false) return;
     const el = e.target;
     if (!el || el !== currentActiveInput) return;
 
@@ -554,6 +575,11 @@
 
   // Autofill all detected fields across the form
   async function autofillAllFields() {
+    if (userSettings.masterEnabled === false) {
+      alert('HOTCOPY: Extension is currently turned OFF. Please turn it ON in the popup.');
+      return;
+    }
+
     if (!activeProfile) {
       alert('HOTCOPY: No client profile captured yet. Please capture a profile first.');
       return;
@@ -599,16 +625,145 @@
     }
   }
 
-  // Enable smooth dragging for the floating dock
-  function makeDraggable(el) {
-    const handle = el.querySelector('.dock-drag-handle');
-    if (!handle) return;
+  // Phone normalizer for WhatsApp (South Africa & International E.164 digits)
+  function normalizeWhatsAppPhone(rawPhone) {
+    if (!rawPhone || typeof rawPhone !== 'string') return null;
+    let cleaned = rawPhone.replace(/\(\s*0\s*\)/g, '').trim().replace(/[^\d+]/g, '');
+    if (cleaned.startsWith('00')) cleaned = '+' + cleaned.slice(2);
+    if (cleaned.startsWith('+')) {
+      const digits = cleaned.slice(1);
+      if (digits.startsWith('270') && digits.length === 12) return '27' + digits.slice(3);
+      return digits.length >= 8 && digits.length <= 15 ? digits : null;
+    }
+    if (cleaned.startsWith('0') && cleaned.length === 10) return '27' + cleaned.slice(1);
+    if (cleaned.startsWith('27') && cleaned.length === 11) return cleaned;
+    if (/^\d{7,15}$/.test(cleaned)) return cleaned;
+    return null;
+  }
 
+  // Open interactive in-page WhatsApp modal
+  function openWhatsAppModal(profile) {
+    if (!profile) return;
+    const existing = document.getElementById('edge-whatsapp-modal-backdrop');
+    if (existing) existing.remove();
+
+    const rawPhone = profile.contactNumber || profile.mobilePhone || profile.emergencyPhone || '';
+    const normalizedPhone = normalizeWhatsAppPhone(rawPhone);
+    if (!normalizedPhone) {
+      alert('HOTCOPY: No valid phone number found in active client profile.');
+      return;
+    }
+
+    const clientName = profile.fullName || [profile.memberName, profile.memberSurname].filter(Boolean).join(' ') || profile.firstName || 'Client';
+    const firstName = profile.firstName || profile.memberName || (profile.fullName ? profile.fullName.split(' ')[0] : 'there');
+    const consultant = profile.consultant || profile.salesConsultant || 'Our Team';
+    const branch = profile.branch || 'our club';
+    const pkg = profile.memberType || profile.membershipType || 'membership';
+    const cmNumber = profile.cmNumber || profile.memberId || '';
+
+    const templates = [
+      {
+        label: '🎉 Welcome & Confirmation',
+        text: `Hi ${firstName}, thank you for joining! This is ${consultant} from ${branch}. Your ${pkg} membership${cmNumber ? ` (CM#: ${cmNumber})` : ''} has been successfully processed. Please let us know if you have any questions!`
+      },
+      {
+        label: '👋 Quick Follow-up',
+        text: `Hi ${firstName}, this is ${consultant} from ${branch} following up on your ${pkg} membership. Hope all is well and we look forward to seeing you!`
+      },
+      {
+        label: '📄 Document Request',
+        text: `Hi ${firstName}, this is ${consultant} from ${branch}. Could you kindly send through a copy of your ID document to finalize your ${pkg} file?`
+      }
+    ];
+
+    const backdrop = document.createElement('div');
+    backdrop.id = 'edge-whatsapp-modal-backdrop';
+
+    backdrop.innerHTML = `
+      <div id="edge-whatsapp-modal">
+        <div class="edge-modal-header">
+          <div class="edge-modal-title">
+            <span>💬 WhatsApp Client Outreach</span>
+          </div>
+          <button class="edge-modal-close" id="edge-modal-close-btn" title="Close">✕</button>
+        </div>
+
+        <div class="edge-modal-recipient">
+          <div>
+            <span class="edge-modal-recipient-name">${clientName}</span>
+            ${cmNumber ? `<span style="color: #94a3b8; font-size: 11px; margin-left: 6px;">(CM#: ${cmNumber})</span>` : ''}
+          </div>
+          <span class="edge-modal-recipient-phone">+${normalizedPhone}</span>
+        </div>
+
+        <div class="edge-modal-field-group">
+          <label class="edge-modal-label">Choose Outreach Template</label>
+          <select class="edge-modal-select" id="edge-modal-template-select">
+            ${templates.map((t, idx) => `<option value="${idx}">${t.label}</option>`).join('')}
+            <option value="custom">✏️ Custom Message</option>
+          </select>
+        </div>
+
+        <div class="edge-modal-field-group">
+          <label class="edge-modal-label">Message Preview & Edit</label>
+          <textarea class="edge-modal-textarea" id="edge-modal-message-text">${templates[0].text}</textarea>
+        </div>
+
+        <div class="edge-modal-footer">
+          <button class="edge-modal-btn cancel" id="edge-modal-cancel-btn">Cancel</button>
+          <button class="edge-modal-btn send" id="edge-modal-send-btn">🚀 Open in WhatsApp Web</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(backdrop);
+
+    const textarea = backdrop.querySelector('#edge-modal-message-text');
+    const select = backdrop.querySelector('#edge-modal-template-select');
+    const closeBtn = backdrop.querySelector('#edge-modal-close-btn');
+    const cancelBtn = backdrop.querySelector('#edge-modal-cancel-btn');
+    const sendBtn = backdrop.querySelector('#edge-modal-send-btn');
+
+    select.addEventListener('change', () => {
+      const val = select.value;
+      if (val !== 'custom' && templates[val]) {
+        textarea.value = templates[val].text;
+      }
+    });
+
+    const closeModal = () => backdrop.remove();
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) closeModal();
+    });
+
+    sendBtn.addEventListener('click', async () => {
+      const msgText = textarea.value.trim();
+      closeModal();
+      await chrome.runtime.sendMessage({
+        type: 'OPEN_WHATSAPP_CHAT',
+        phone: normalizedPhone,
+        text: msgText,
+        autoSend: userSettings.waAutoSend === true
+      });
+    });
+  }
+
+  // Enable smooth dragging for the floating bubble and dock
+  function makeDraggable(el) {
     let isDragging = false;
+    let hasMoved = false;
     let startX, startY, initialLeft, initialTop;
 
-    handle.addEventListener('mousedown', (e) => {
+    const onMouseDown = (e) => {
+      // In expanded mode, only drag if clicking drag handle or logo
+      // In bubble mode, dragging anywhere on bubble initiates drag
+      if (!dockCollapsed && !e.target.closest('.dock-drag-handle') && !e.target.closest('.dock-logo')) return;
+      if (e.target.closest('.dock-btn') || e.target.closest('button')) return;
+
       isDragging = true;
+      hasMoved = false;
       startX = e.clientX;
       startY = e.clientY;
 
@@ -626,14 +781,25 @@
         const dx = ev.clientX - startX;
         const dy = ev.clientY - startY;
 
-        let newX = Math.max(10, Math.min(window.innerWidth - el.offsetWidth - 10, initialLeft + dx));
-        let newY = Math.max(10, Math.min(window.innerHeight - el.offsetHeight - 10, initialTop + dy));
+        if (Math.hypot(dx, dy) > 4) {
+          hasMoved = true;
+        }
+
+        const width = el.offsetWidth || 50;
+        const height = el.offsetHeight || 50;
+        let newX = Math.max(10, Math.min(window.innerWidth - width - 10, initialLeft + dx));
+        let newY = Math.max(10, Math.min(window.innerHeight - height - 10, initialTop + dy));
 
         el.style.left = `${newX}px`;
         el.style.top = `${newY}px`;
       };
 
       const onMouseUp = () => {
+        if (isDragging && hasMoved) {
+          const rect = el.getBoundingClientRect();
+          bubblePos = { left: Math.round(rect.left), top: Math.round(rect.top) };
+          chrome.storage.local.set({ bubble_pos: bubblePos });
+        }
         isDragging = false;
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
@@ -641,10 +807,12 @@
 
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
-    });
+    };
+
+    el.addEventListener('mousedown', onMouseDown);
   }
 
-  // Floating dock: Always visible and on top across all pages once activated
+  // Floating Movable Bubble & Dock: Always visible and on top across all pages once activated
   function updateDockUI() {
     let dock = document.getElementById('edge-assistant-dock');
 
@@ -652,7 +820,7 @@
     const isMainViewport = (window.self === window.top) || (window.innerWidth > 350 && window.innerHeight > 250);
     if (!isMainViewport) return;
 
-    if (!userSettings.showFloatingWidget || !activeProfile || dockClosed) {
+    if (userSettings.masterEnabled === false || !userSettings.showFloatingWidget || !activeProfile || dockClosed) {
       if (dock) dock.remove();
       return;
     }
@@ -672,6 +840,35 @@
       makeDraggable(dock);
     }
 
+    // Apply remembered coordinates
+    if (bubblePos && bubblePos.left !== undefined && bubblePos.top !== undefined) {
+      dock.style.bottom = 'auto';
+      dock.style.right = 'auto';
+      dock.style.left = `${bubblePos.left}px`;
+      dock.style.top = `${bubblePos.top}px`;
+    }
+
+    if (dockCollapsed) {
+      dock.className = 'dock-bubble-mode';
+      dock.title = `HOTCOPY: ${clientName} (${fieldCount} details) — Click to expand / Drag to move`;
+      dock.innerHTML = `
+        <div class="dock-bubble-badge" title="HOTCOPY Active Profile Loaded"></div>
+        <img class="dock-logo" src="${logoUrl}" alt="HOTCOPY" />
+      `;
+
+      dock.onclick = (e) => {
+        if (e.target.closest('.dock-btn')) return;
+        dockCollapsed = false;
+        chrome.storage.local.set({ dock_collapsed: false });
+        updateDockUI();
+      };
+      return;
+    }
+
+    // Expanded Dock Mode
+    dock.onclick = null;
+    dock.className = 'dock-expanded-mode';
+    dock.title = '';
     dock.innerHTML = `
       <div class="dock-drag-handle" title="Drag to move floating window">⠿</div>
       <img class="dock-logo" src="${logoUrl}" alt="Logo" />
@@ -684,10 +881,16 @@
         <button class="dock-btn primary" id="edge-dock-fill-all" title="Autofill all mapped fields on this form">
           ⚡ Fill All
         </button>
+        <button class="dock-btn wa-btn" id="edge-dock-whatsapp" title="Send WhatsApp outreach message">
+          💬 WhatsApp
+        </button>
         <button class="dock-btn" id="edge-dock-pick" title="Open values menu">
           📋 Values
         </button>
-        <button class="dock-btn close-btn" id="edge-dock-close" title="Close floating window">
+        <button class="dock-btn icon-btn" id="edge-dock-collapse" title="Collapse to movable bubble">
+          −
+        </button>
+        <button class="dock-btn icon-btn close-btn" id="edge-dock-close" title="Close floating window">
           ✕
         </button>
       </div>
@@ -704,6 +907,7 @@
     }
 
     dock.querySelector('#edge-dock-fill-all').addEventListener('click', () => autofillAllFields());
+    dock.querySelector('#edge-dock-whatsapp').addEventListener('click', () => openWhatsAppModal(activeProfile));
 
     dock.querySelector('#edge-dock-pick').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -714,6 +918,13 @@
       } else {
         alert('Please click into a form field first.');
       }
+    });
+
+    dock.querySelector('#edge-dock-collapse').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      dockCollapsed = true;
+      await chrome.storage.local.set({ dock_collapsed: true });
+      updateDockUI();
     });
 
     dock.querySelector('#edge-dock-close').addEventListener('click', async (e) => {

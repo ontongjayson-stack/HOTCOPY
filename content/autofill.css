@@ -180,7 +180,7 @@
   text-align: right;
 }
 
-/* Floating HOTCOPY Dock (Always On Top) */
+/* Floating HOTCOPY Movable Bubble & Dock (Always On Top) */
 #edge-assistant-dock {
   position: fixed !important;
   bottom: 24px;
@@ -188,10 +188,8 @@
   z-index: 2147483647 !important;
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
   background: #0f172a !important; /* Slate 900 */
   color: #f8fafc !important;
-  padding: 8px 14px !important;
   border-radius: 30px !important;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 0 1.5px #38bdf8 !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
@@ -202,6 +200,55 @@
   opacity: 1 !important;
   cursor: default;
   max-width: 95vw;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), height 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+/* Collapsed Bubble Mode */
+#edge-assistant-dock.dock-bubble-mode {
+  width: 50px !important;
+  height: 50px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0 !important;
+  cursor: grab !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 2px #10b981 !important; /* Emerald glow */
+}
+
+#edge-assistant-dock.dock-bubble-mode:hover {
+  transform: scale(1.08);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6), 0 0 0 2.5px #34d399 !important;
+}
+
+#edge-assistant-dock.dock-bubble-mode .dock-logo {
+  width: 32px !important;
+  height: 32px !important;
+  cursor: pointer;
+}
+
+#edge-assistant-dock.dock-bubble-mode .dock-bubble-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  background: #10b981;
+  border: 2px solid #0f172a;
+  border-radius: 50%;
+  animation: edgePulse 2s infinite;
+}
+
+@keyframes edgePulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* Expanded Dock Mode */
+#edge-assistant-dock.dock-expanded-mode {
+  padding: 8px 14px !important;
+  gap: 10px !important;
 }
 
 #edge-assistant-dock .dock-drag-handle {
@@ -214,7 +261,8 @@
   align-items: center;
 }
 
-#edge-assistant-dock .dock-drag-handle:active {
+#edge-assistant-dock .dock-drag-handle:active,
+#edge-assistant-dock.dock-bubble-mode:active {
   cursor: grabbing !important;
 }
 
@@ -235,7 +283,7 @@
   font-weight: 700;
   font-size: 13px;
   color: #f8fafc;
-  max-width: 150px;
+  max-width: 140px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -281,15 +329,192 @@
   background: #0284c7;
 }
 
-#edge-assistant-dock .dock-btn.close-btn {
+#edge-assistant-dock .dock-btn.wa-btn {
+  background: #059669 !important; /* Emerald 600 */
+}
+
+#edge-assistant-dock .dock-btn.wa-btn:hover {
+  background: #047857 !important; /* Emerald 700 */
+}
+
+#edge-assistant-dock .dock-btn.icon-btn {
   background: transparent !important;
   color: #94a3b8 !important;
-  font-size: 14px !important;
-  padding: 4px 8px !important;
+  font-size: 13px !important;
+  padding: 4px 6px !important;
   border-radius: 50% !important;
+}
+
+#edge-assistant-dock .dock-btn.icon-btn:hover {
+  background: #334155 !important;
+  color: #ffffff !important;
 }
 
 #edge-assistant-dock .dock-btn.close-btn:hover {
   background: #ef4444 !important;
   color: #ffffff !important;
+}
+
+/* In-Page WhatsApp Outreach Modal */
+#edge-whatsapp-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(4px) !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  animation: edgeModalFade 0.15s ease-out;
+}
+
+@keyframes edgeModalFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#edge-whatsapp-modal {
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 14px;
+  border: 1px solid #334155;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(16, 185, 129, 0.3);
+  width: 90vw;
+  max-width: 480px;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+}
+
+.edge-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 10px;
+}
+
+.edge-modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edge-modal-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.edge-modal-close:hover {
+  color: #f8fafc;
+}
+
+.edge-modal-recipient {
+  background: #1e293b;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.edge-modal-recipient-name {
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.edge-modal-recipient-phone {
+  color: #10b981;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.edge-modal-field-group {
+  margin-bottom: 14px;
+}
+
+.edge-modal-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.edge-modal-select,
+.edge-modal-textarea {
+  width: 100%;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #f8fafc;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.edge-modal-select:focus,
+.edge-modal-textarea:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.edge-modal-textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.4;
+}
+
+.edge-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.edge-modal-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s ease;
+}
+
+.edge-modal-btn.cancel {
+  background: #334155;
+  color: #94a3b8;
+}
+
+.edge-modal-btn.cancel:hover {
+  background: #475569;
+  color: #f8fafc;
+}
+
+.edge-modal-btn.send {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.edge-modal-btn.send:hover {
+  background: #059669;
 }
